@@ -127,16 +127,16 @@ html, body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: clamp(8px, 1.6vh, 16px);
+  gap: 1.6%;
   margin-top: 12%;
 }
 
 #ogbally {
-  width: clamp(225px, 39vw, 420px);
+  width: 39%;
 }
 
 .intro-btn {
-  width: clamp(120px, 20vw, 220px);
+  width: 20%;
   cursor: pointer;
   transition: transform 0.18s ease;
 }
