@@ -11,7 +11,7 @@
   var PLYR_SPD = 5, PLYR_JUMP = -11.5;
   var PLYR_R = 52;            // collision radius
   var PLYR_H = 180;           // render height
-  var BALL_R = 30;
+  var BALL_R = 40;
   var BALL_HIT = 9;
   var MAX_BALL_SPD = 14;
   var DA_H = 340;
@@ -149,11 +149,14 @@
   }
 
   function p1Input() {
+    if (mode === 2) {
+      return { left: keys['KeyD'], right: keys['KeyG'], up: keys['KeyR'], spike: keys['KeyZ'] };
+    }
     return {
-      left:  keys['KeyD']  || touch.left,
-      right: keys['KeyG']  || touch.right,
-      up:    keys['KeyR']  || touch.up,
-      spike: keys['KeyZ']  || touch.spike
+      left:  keys['ArrowLeft']  || touch.left,
+      right: keys['ArrowRight'] || touch.right,
+      up:    keys['ArrowUp']    || touch.up,
+      spike: keys['Enter']      || touch.spike
     };
   }
   function p2Input() {
@@ -417,6 +420,7 @@
         ball.vx = spikeDir * spikeSpd * 0.75;
         ball.vy = spikeSpd * 0.65;
       } else {
+        play(snd.smash);
         var spd = BALL_HIT + Math.abs(p.vx) * 0.35 + (p.vy < 0 ? Math.abs(p.vy) * 0.4 : 0);
         spd = Math.min(spd, MAX_BALL_SPD);
         ball.vx = nx * spd;
@@ -567,10 +571,12 @@
     ctx.fillText(stxt, GW / 2, 40);
 
     if (state === 'CELEBRATION') {
-      ctx.font = 'bold 26px sans-serif';
+      ctx.font = 'bold 78px sans-serif';
+      ctx.lineWidth = 6;
       var wt = celebWinner === 0 ? 'YOGOM WIN!' : 'MEH-NEY WIN!';
-      ctx.strokeText(wt, GW / 2, 76);
-      ctx.fillText(wt, GW / 2, 76);
+      ctx.fillStyle = celebWinner === 0 ? '#80b8e4' : '#ffde7c';
+      ctx.strokeText(wt, GW / 2, 150);
+      ctx.fillText(wt, GW / 2, 150);
 
       if (stateTimer > 2000) {
         ctx.font = '16px sans-serif';

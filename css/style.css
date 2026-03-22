@@ -105,10 +105,10 @@ html, body {
 #daegyul {
   position: absolute;
   z-index: 2;
-  left: 4%;
-  top: 4%;
-  width: 26%;
-  max-width: 260px;
+  left: calc(4% + 3px);
+  top: calc(4% + 6px);
+  width: 29.3%;
+  max-width: 338px;
   animation: heartbeat 1.3s ease-in-out infinite;
 }
 @keyframes heartbeat {
@@ -132,13 +132,17 @@ html, body {
 }
 
 #ogbally {
-  width: clamp(150px, 26vw, 280px);
+  width: clamp(225px, 39vw, 420px);
 }
 
 .intro-btn {
   width: clamp(120px, 20vw, 220px);
   cursor: pointer;
   transition: transform 0.18s ease;
+}
+#btn-1p {
+  position: relative;
+  top: 5px;
 }
 .intro-btn:hover {
   transform: scale(1.13);
