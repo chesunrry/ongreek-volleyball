@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>OnGreek Volleyball</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="assets/img/chesunrry.png">
+</head>
+<body>
+  <div id="game-container">
+
+    <!-- Loading -->
+    <div id="loading-screen" class="screen">
+      <p>Loading...</p>
+      <div class="loading-bar-outer"><div class="loading-bar-inner" id="load-bar"></div></div>
+    </div>
+
+    <!-- Splash (auto 3s) -->
+    <div id="splash-screen" class="screen hidden">
+      <img src="assets/img/chesunrry.png" id="splash-img" alt="">
+    </div>
+
+    <!-- Intro -->
+    <div id="intro-screen" class="screen hidden">
+      <img src="assets/img/intro/ong-bg.png" id="intro-bg" alt="">
+      <img src="assets/img/intro/daegyul.png" id="daegyul" alt="">
+      <div id="intro-center">
+        <img src="assets/img/intro/ogbally.png" id="ogbally" alt="">
+        <img src="assets/img/intro/1p.png" id="btn-1p" class="intro-btn" alt="1P">
+        <img src="assets/img/intro/2p.png" id="btn-2p" class="intro-btn" alt="2P">
+      </div>
+      <img src="assets/img/intro/%C2%A9%202026%20chesunrry.%20All%20rights%20reserved.png" id="copyright-img" alt="© 2026 chesunrry">
+    </div>
+
+    <!-- Game Canvas -->
+    <canvas id="game-canvas" class="hidden" width="850" height="600"></canvas>
+
+    <!-- Mobile Controls -->
+    <div id="mobile-controls" class="hidden">
+      <div id="m-dpad">
+        <button id="m-left" class="m-btn">◀</button>
+        <button id="m-right" class="m-btn">▶</button>
+      </div>
+      <div id="m-jump-wrap">
+        <button id="m-jump" class="m-btn">▲</button>
+        <button id="m-spike" class="m-btn">⬇</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/game.js"></script>
+</body>
+</html>
