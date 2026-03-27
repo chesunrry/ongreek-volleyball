@@ -115,6 +115,15 @@
     snd._cur = null;
   }
 
+  var audioUnlocked = false;
+  function unlockAudio() {
+    if (audioUnlocked) return;
+    audioUnlocked = true;
+    [snd.btn, snd.intro].forEach(function (a) {
+      a.play().then(function () { a.pause(); a.currentTime = 0; }).catch(function () {});
+    });
+  }
+
   function play(a) { a.currentTime = 0; a.play().catch(function(){}); }
 
   function startIntroBgm()  { stopIngameBgm(); snd.intro.currentTime = 0; snd.intro.play().catch(function(){}); }
@@ -130,7 +139,8 @@
     snd._cur = b;
   }
   function stopIngameBgm() {
-    if (snd._cur) { snd._cur.pause(); snd._cur.currentTime = 0; snd._cur.onended = null; snd._cur = null; }
+    snd.bgm.forEach(function (b) { b.pause(); b.currentTime = 0; b.onended = null; });
+    snd._cur = null;
   }
   function stopAllAudio() { stopIntroBgm(); stopIngameBgm(); }
 
@@ -627,22 +637,34 @@
   /* ==========================================================
      SCREEN TRANSITIONS
      ========================================================== */
+  function fadeSplash() {
+    if (state !== 'SPLASH') return;
+    state = 'SPLASH_FADE';
+    play(snd.btn);
+    splashScreen.classList.add('fade-out');
+    setTimeout(function () {
+      splashScreen.classList.add('hidden');
+      showIntro();
+    }, SPLASH_FADE);
+  }
+
   function showSplash() {
     loadingScreen.classList.add('hidden');
     splashScreen.classList.remove('hidden');
     state = 'SPLASH';
 
+    // Click/tap to skip splash (provides user gesture for audio)
+    function onSplashInteract() {
+      splashScreen.removeEventListener('click', onSplashInteract);
+      splashScreen.removeEventListener('touchend', onSplashInteract);
+      unlockAudio();
+      fadeSplash();
+    }
+    splashScreen.addEventListener('click', onSplashInteract);
+    splashScreen.addEventListener('touchend', onSplashInteract);
+
     // Auto-advance after 3 seconds
-    setTimeout(function () {
-      if (state !== 'SPLASH') return;
-      state = 'SPLASH_FADE';
-      play(snd.btn);
-      splashScreen.classList.add('fade-out');
-      setTimeout(function () {
-        splashScreen.classList.add('hidden');
-        showIntro();
-      }, SPLASH_FADE);
-    }, SPLASH_DELAY);
+    setTimeout(function () { fadeSplash(); }, SPLASH_DELAY);
   }
 
   function showIntro() {
