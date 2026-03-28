@@ -147,6 +147,14 @@ html, body {
 .intro-btn:hover {
   transform: scale(1.13);
 }
+.intro-btn.menu-selected {
+  animation: menu-pulse 0.8s ease-in-out infinite alternate;
+  filter: brightness(1.2);
+}
+@keyframes menu-pulse {
+  from { transform: scale(1.0); }
+  to   { transform: scale(1.13); }
+}
 .intro-btn:active {
   transform: scale(1.05);
 }
