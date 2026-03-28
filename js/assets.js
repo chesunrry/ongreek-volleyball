@@ -49,18 +49,14 @@
 
   /* --- Audio --- */
 
+  var _actx = null;       // AudioContext (created on user gesture)
+  var _smashBuf = null;   // decoded AudioBuffer for smash sound
+
   G.initAudio = function () {
     G.snd.btn   = new Audio('assets/audio/start_button_sound.ogg');
     G.snd.intro = new Audio('assets/audio/start_screen_bgm.wav');
     G.snd.intro.loop = true;
-    // Pool smash sounds to avoid currentTime reset stutter on mobile
-    G.snd._smashPool = [
-      new Audio('assets/audio/smash_sound.mp3'),
-      new Audio('assets/audio/smash_sound.mp3'),
-      new Audio('assets/audio/smash_sound.mp3')
-    ];
-    G.snd._smashIdx = 0;
-    G.snd.smash = G.snd._smashPool[0];
+    G.snd.smash = 'WEB_AUDIO_SMASH';  // sentinel — handled via Web Audio API
     G.snd.bgm   = [
       new Audio('assets/audio/ingamebgm-1.mp3'),
       new Audio('assets/audio/ingamebgm-2.mp3'),
@@ -69,11 +65,33 @@
     G.snd._cur = null;
   };
 
+  function ensureAudioCtx() {
+    if (_actx) return _actx;
+    _actx = new (window.AudioContext || window.webkitAudioContext)();
+    // Fetch and decode smash sound into buffer
+    fetch('assets/audio/smash_sound.mp3')
+      .then(function (r) { return r.arrayBuffer(); })
+      .then(function (buf) { return _actx.decodeAudioData(buf); })
+      .then(function (decoded) { _smashBuf = decoded; })
+      .catch(function () {});
+    return _actx;
+  }
+
+  function playSmashWebAudio() {
+    if (!_actx || !_smashBuf) return;
+    if (_actx.state === 'suspended') _actx.resume();
+    var src = _actx.createBufferSource();
+    src.buffer = _smashBuf;
+    src.connect(_actx.destination);
+    src.start(0);
+  }
+
   var audioUnlocked = false;
 
   G.unlockAudio = function () {
     if (audioUnlocked) return;
     audioUnlocked = true;
+    ensureAudioCtx();
     document.removeEventListener('click', _globalUnlock);
     document.removeEventListener('keydown', _globalUnlock);
     document.removeEventListener('touchstart', _globalUnlock);
@@ -92,11 +110,7 @@
 
   G.play = function (a) {
     if (a === G.snd.smash) {
-      // Round-robin smash pool — avoids currentTime reset stutter
-      var s = G.snd._smashPool[G.snd._smashIdx];
-      G.snd._smashIdx = (G.snd._smashIdx + 1) % G.snd._smashPool.length;
-      s.currentTime = 0;
-      s.play().catch(function () {});
+      playSmashWebAudio();
       return;
     }
     a.currentTime = 0; a.play().catch(function () {});
