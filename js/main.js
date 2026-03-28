@@ -24,7 +24,13 @@
     G.aiTouches = 0;
     G.aiBallWasOnMySide = false;
 
-    var side = Math.random() < 0.5 ? 0 : 1;
+    // First round: random, after that: scorer gets serve
+    var side;
+    if (G.lastScorer < 0) {
+      side = Math.random() < 0.5 ? 0 : 1;
+    } else {
+      side = G.lastScorer;
+    }
     G.ball.x = (side === 0) ? G.P1_HOME : G.P2_HOME;
     G.ball.y = 60;
     G.ball.vx = 0; G.ball.vy = 0; G.ball.rot = 0; G.ball.dead = false;
@@ -163,6 +169,7 @@
     if (G.btn2P) G.btn2P.addEventListener('click', function () { G.startGame(2); });
 
     G.loadImages(function () {
+      G.prebuildSpriteCache();
       G.showSplash();
       requestAnimationFrame(function (ts) { G.lastTS = ts; loop(ts); });
     });
