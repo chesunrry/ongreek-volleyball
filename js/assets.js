@@ -77,8 +77,13 @@
     return _actx;
   }
 
+  var _lastSmashT = 0;
+
   function playSmashWebAudio() {
     if (!_actx || !_smashBuf) return;
+    var now = performance.now();
+    if (now - _lastSmashT < 50) return;   // debounce — 50ms cooldown
+    _lastSmashT = now;
     if (_actx.state === 'suspended') _actx.resume();
     var src = _actx.createBufferSource();
     src.buffer = _smashBuf;
