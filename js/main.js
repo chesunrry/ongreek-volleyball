@@ -160,14 +160,6 @@
      ========================================================== */
   function init() {
     G.detectMobile();
-
-    // Mobile: halve canvas resolution, CSS handles upscaling
-    if (G.isMobile) {
-      G.canvasEl.width  = G.GW / 2;
-      G.canvasEl.height = G.GH / 2;
-      G.ctx = G.canvasEl.getContext('2d');
-    }
-
     G.setupInput();
     G.setupMobile();
     G.initAudio();

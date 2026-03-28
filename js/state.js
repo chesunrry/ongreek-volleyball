@@ -28,7 +28,6 @@
   G.stateTimer = 0;
   G.animT      = 0;
   G.isMobile   = false;
-  G.scale      = 1;
 
   /* objects */
   G.img   = {};
