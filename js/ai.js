@@ -118,9 +118,13 @@
 
     /* --- MOVEMENT --- */
     var dx = targetX - p.x;
+    var adx = Math.abs(dx);
     p.vx = 0;
-    if (dx > 3)       p.vx =  G.AI_SPD;
-    else if (dx < -3) p.vx = -G.AI_SPD;
+    if (adx > G.AI_SPD) {
+      p.vx = dx > 0 ? G.AI_SPD : -G.AI_SPD;
+    } else if (adx > 2) {
+      p.vx = dx;  // snap: move exact remaining distance
+    }
 
     /* --- JUMP DECISION --- */
     var distX = Math.abs(p.x - ball.x);
