@@ -166,7 +166,6 @@
       G.canvasEl.width  = G.GW / 2;
       G.canvasEl.height = G.GH / 2;
       G.ctx = G.canvasEl.getContext('2d');
-      G.ctx.scale(0.5, 0.5);
     }
 
     G.setupInput();

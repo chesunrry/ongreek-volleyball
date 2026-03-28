@@ -1,5 +1,5 @@
 /* ==========================================================
-   RENDER  — drawing functions (mobile-optimized)
+   RENDER  — drawing functions (mobile-optimized, zero-transform)
    ========================================================== */
 (function (G) {
   'use strict';
@@ -19,7 +19,6 @@
     return sprCache[key];
   }
 
-  /* Also pre-scale flipped versions */
   function getScaledFlip(im, h) {
     if (!im || !im.complete || !im.naturalHeight) return null;
     var key = im.src + '|' + h + '|flip';
@@ -35,7 +34,6 @@
     return sprCache[key];
   }
 
-  /* Square-scaled cache for ball (original draws ball as square) */
   function getScaledSquare(im, size) {
     if (!im || !im.complete || !im.naturalHeight) return null;
     var key = im.src + '|sq' + size;
@@ -56,14 +54,13 @@
     c.width = cw; c.height = ch;
     var bctx = c.getContext('2d');
     bctx.drawImage(G.img['ingame-bg'], 0, 0, cw, ch);
-    // Pre-render net
+    // Pre-render net into background
     var netImg = G.img['net'];
     if (netImg.complete && netImg.naturalHeight) {
-      var sx = cw / G.GW, sy = ch / G.GH;
-      var netH = (G.GROUND_Y - G.NET_TOP) * sy;
+      var S = G.scale;
+      var netH = (G.GROUND_Y - G.NET_TOP) * S;
       var netW = netH * (netImg.naturalWidth / netImg.naturalHeight);
-      var netX = G.NET_X * sx - netW / 2;
-      bctx.drawImage(netImg, netX, G.NET_TOP * sy, netW, netH);
+      bctx.drawImage(netImg, G.NET_X * S - netW / 2, G.NET_TOP * S, netW, netH);
     }
     bgCache = c;
   }
@@ -73,47 +70,58 @@
   var scoreCacheKey = '';
 
   function buildScoreCache(s0, s1) {
-    var key = s0 + '-' + s1;
+    var S = G.scale;
+    var key = s0 + '-' + s1 + '-' + S;
     if (scoreCache && scoreCacheKey === key) return;
     scoreCacheKey = key;
-    if (!scoreCache) {
+    var cw = Math.round(200 * S), ch = Math.round(50 * S);
+    if (!scoreCache || scoreCache.width !== cw) {
       scoreCache = document.createElement('canvas');
-      scoreCache.width = 200; scoreCache.height = 50;
+      scoreCache.width = cw; scoreCache.height = ch;
     }
     var sc = scoreCache.getContext('2d');
-    sc.clearRect(0, 0, 200, 50);
-    sc.font = 'bold 32px "Arial Black", sans-serif';
+    sc.clearRect(0, 0, cw, ch);
+    sc.font = 'bold ' + Math.round(32 * S) + 'px "Arial Black", sans-serif';
     sc.textAlign = 'center';
-    sc.lineWidth = 4;
+    sc.lineWidth = Math.max(1, Math.round(4 * S));
     sc.strokeStyle = '#000';
     sc.fillStyle = '#fff';
     var stxt = s0 + '  -  ' + s1;
-    sc.strokeText(stxt, 100, 36);
-    sc.fillText(stxt, 100, 36);
+    sc.strokeText(stxt, cw / 2, Math.round(36 * S));
+    sc.fillText(stxt, cw / 2, Math.round(36 * S));
   }
 
   /* Pre-build sprite caches after images loaded */
   G.prebuildSpriteCache = function () {
+    var S = G.scale;
     var keys = Object.keys(G.img);
     for (var i = 0; i < keys.length; i++) {
       var k = keys[i];
       var im = G.img[k];
       if (!im.complete || !im.naturalHeight) continue;
-      // Determine render height per sprite type
       var h = 0;
       if (k.indexOf('da-') === 0) h = G.DA_H;
       else if (k.indexOf('yo-') === 0 || k.indexOf('me-') === 0) h = G.PLYR_H;
       else if (k.indexOf('ball-') === 0) h = G.BALL_R * 2;
       if (h > 0) {
-        getScaled(im, h);
-        getScaledFlip(im, h);
+        var sh = Math.round(h * S);
+        getScaled(im, sh);
+        getScaledFlip(im, sh);
+        if (k.indexOf('ball-') === 0) getScaledSquare(im, sh);
       }
+    }
+    // Pre-cache net
+    var netImg = G.img['net'];
+    if (netImg && netImg.complete && netImg.naturalHeight) {
+      var netH = Math.round((G.GROUND_Y - G.NET_TOP) * S);
+      getScaled(netImg, netH);
     }
   };
 
   G.render = function () {
     var ctx = G.ctx;
-    ctx.clearRect(0, 0, G.GW, G.GH);
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, G.canvasEl.width, G.canvasEl.height);
     if (G.state === 'SERVE' || G.state === 'PLAYING' || G.state === 'POINT' || G.state === 'CELEBRATION') {
       if (!bgCache) buildBgCache();
       drawGame(ctx);
@@ -121,56 +129,58 @@
   };
 
   function drawGame(ctx) {
-    // Draw bgCache at native pixel resolution (no transform scaling)
-    ctx.save();
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    var S = G.scale;
+
+    // bgCache at native pixel resolution (no transform)
     ctx.drawImage(bgCache, 0, 0);
-    ctx.restore();
 
     var aFrame = Math.floor(G.animT / G.ANIM_MS) % 2;
     var daKey = (G.state === 'CELEBRATION' || G.state === 'POINT') ? (aFrame === 0 ? 'da-1' : 'da-2') : 'da-2';
-    drawSpr(ctx, G.img[daKey], G.NET_X, G.GROUND_Y, G.DA_H, false);
+    drawSpr(ctx, G.img[daKey], G.NET_X * S, G.GROUND_Y * S, Math.round(G.DA_H * S), false);
 
-    drawPlayer(ctx, G.p1, aFrame);
-    drawPlayer(ctx, G.p2, aFrame);
+    drawPlayer(ctx, G.p1, aFrame, S);
+    drawPlayer(ctx, G.p2, aFrame, S);
 
-    // Net on top of characters
+    // Net on top of characters (pre-cached)
     var netImg = G.img['net'];
     if (netImg.complete && netImg.naturalHeight) {
-      var netH = G.GROUND_Y - G.NET_TOP;
-      var netW = netH * (netImg.naturalWidth / netImg.naturalHeight);
-      ctx.drawImage(netImg, G.NET_X - netW / 2, G.NET_TOP, netW, netH);
+      var netH = Math.round((G.GROUND_Y - G.NET_TOP) * S);
+      var netCached = getScaled(netImg, netH);
+      if (netCached) {
+        ctx.drawImage(netCached.canvas, G.NET_X * S - netCached.w / 2, G.NET_TOP * S);
+      }
     }
 
-    // ball
+    // Ball
     var ballKey = (G.state === 'POINT' && G.ball.dead) ? 'ball-2' : 'ball-1';
-    drawBall(ctx, G.img[ballKey], G.ball.x, G.ball.y, G.BALL_R, G.ball.rot);
+    var bR = Math.round(G.BALL_R * S);
+    drawBall(ctx, G.img[ballKey], G.ball.x * S, G.ball.y * S, bR, G.ball.rot);
 
-    // score
+    // Score
     buildScoreCache(G.score[0], G.score[1]);
-    ctx.drawImage(scoreCache, G.GW / 2 - 100, 0);
+    ctx.drawImage(scoreCache, G.GW / 2 * S - scoreCache.width / 2, 0);
 
     if (G.state === 'CELEBRATION') {
       ctx.save();
-      ctx.font = 'bold 78px sans-serif';
+      ctx.font = 'bold ' + Math.round(78 * S) + 'px sans-serif';
       ctx.textAlign = 'center';
-      ctx.lineWidth = 6;
+      ctx.lineWidth = Math.max(1, Math.round(6 * S));
       ctx.strokeStyle = '#000';
       var wt = G.celebWinner === 0 ? 'YOGOM WIN!' : 'MEH-NEY WIN!';
       ctx.fillStyle = G.celebWinner === 0 ? '#80b8e4' : '#ffde7c';
-      ctx.strokeText(wt, G.GW / 2, 150);
-      ctx.fillText(wt, G.GW / 2, 150);
+      ctx.strokeText(wt, G.GW / 2 * S, 150 * S);
+      ctx.fillText(wt, G.GW / 2 * S, 150 * S);
 
       if (G.stateTimer > 2000) {
-        ctx.font = '16px sans-serif';
+        ctx.font = Math.round(16 * S) + 'px sans-serif';
         ctx.fillStyle = 'rgba(255,255,255,0.8)';
-        ctx.fillText('\ud074\ub9ad \ub610\ub294 \uc544\ubb34 \ud0a4\ub97c \ub20c\ub7ec \ub3cc\uc544\uac00\uae30', G.GW / 2, G.GH - 24);
+        ctx.fillText('\ud074\ub9ad \ub610\ub294 \uc544\ubb34 \ud0a4\ub97c \ub20c\ub7ec \ub3cc\uc544\uac00\uae30', G.GW / 2 * S, (G.GH - 24) * S);
       }
       ctx.restore();
     }
   }
 
-  function drawPlayer(ctx, p, aFrame) {
+  function drawPlayer(ctx, p, aFrame, S) {
     var key;
     switch (p.anim) {
       case 'walk':      key = p.prefix + '-wk' + (aFrame + 1); break;
@@ -179,7 +189,7 @@
       default:          key = p.prefix + '-st';
     }
     var flip = (p.faceDir !== p.faceDef);
-    drawSpr(ctx, G.img[key], p.x, p.y, G.PLYR_H, flip);
+    drawSpr(ctx, G.img[key], p.x * S, p.y * S, Math.round(G.PLYR_H * S), flip);
   }
 
   function drawSpr(ctx, im, x, y, h, flip) {

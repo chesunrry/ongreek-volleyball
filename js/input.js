@@ -62,7 +62,10 @@
 
   G.detectMobile = function () {
     G.isMobile = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
-    if (G.isMobile) G.ctx.imageSmoothingQuality = 'low';
+    if (G.isMobile) {
+      G.ctx.imageSmoothingQuality = 'low';
+      G.scale = 0.5;
+    }
   };
 
   G.setupMobile = function () {
