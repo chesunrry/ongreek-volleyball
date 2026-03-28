@@ -31,21 +31,29 @@
     document.addEventListener('keyup', function (e) { G.keys[e.code] = false; });
   };
 
+  /* Pre-allocated input objects to avoid GC */
+  var _p1inp = { left: false, right: false, up: false, spike: false };
+  var _p1inp2 = { left: false, right: false, up: false, spike: false };
+  var _p2inp = { left: false, right: false, up: false, spike: false };
+
   G.p1Input = function () {
     if (G.mode === 2) {
-      return { left: G.keys['KeyD'], right: G.keys['KeyG'], up: G.keys['KeyR'], spike: G.keys['KeyZ'] };
+      _p1inp2.left = !!G.keys['KeyD']; _p1inp2.right = !!G.keys['KeyG'];
+      _p1inp2.up = !!G.keys['KeyR']; _p1inp2.spike = !!G.keys['KeyZ'];
+      return _p1inp2;
     }
-    return {
-      left:  G.keys['ArrowLeft']  || G.touch.left,
-      right: G.keys['ArrowRight'] || G.touch.right,
-      up:    G.keys['ArrowUp']    || G.touch.up,
-      spike: G.keys['Enter']      || G.touch.spike
-    };
+    _p1inp.left  = !!(G.keys['ArrowLeft']  || G.touch.left);
+    _p1inp.right = !!(G.keys['ArrowRight'] || G.touch.right);
+    _p1inp.up    = !!(G.keys['ArrowUp']    || G.touch.up);
+    _p1inp.spike = !!(G.keys['Enter']      || G.touch.spike);
+    return _p1inp;
   };
 
   G.p2Input = function () {
     if (G.mode === 2) {
-      return { left: G.keys['ArrowLeft'], right: G.keys['ArrowRight'], up: G.keys['ArrowUp'], spike: G.keys['Enter'] };
+      _p2inp.left = !!G.keys['ArrowLeft']; _p2inp.right = !!G.keys['ArrowRight'];
+      _p2inp.up = !!G.keys['ArrowUp']; _p2inp.spike = !!G.keys['Enter'];
+      return _p2inp;
     }
     return null;
   };

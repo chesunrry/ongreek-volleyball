@@ -53,7 +53,14 @@
     G.snd.btn   = new Audio('assets/audio/start_button_sound.ogg');
     G.snd.intro = new Audio('assets/audio/start_screen_bgm.wav');
     G.snd.intro.loop = true;
-    G.snd.smash = new Audio('assets/audio/smash_sound.mp3');
+    // Pool smash sounds to avoid currentTime reset stutter on mobile
+    G.snd._smashPool = [
+      new Audio('assets/audio/smash_sound.mp3'),
+      new Audio('assets/audio/smash_sound.mp3'),
+      new Audio('assets/audio/smash_sound.mp3')
+    ];
+    G.snd._smashIdx = 0;
+    G.snd.smash = G.snd._smashPool[0];
     G.snd.bgm   = [
       new Audio('assets/audio/ingamebgm-1.mp3'),
       new Audio('assets/audio/ingamebgm-2.mp3'),
@@ -83,7 +90,17 @@
     document.addEventListener('touchstart', _globalUnlock);
   };
 
-  G.play = function (a) { a.currentTime = 0; a.play().catch(function () {}); };
+  G.play = function (a) {
+    if (a === G.snd.smash) {
+      // Round-robin smash pool — avoids currentTime reset stutter
+      var s = G.snd._smashPool[G.snd._smashIdx];
+      G.snd._smashIdx = (G.snd._smashIdx + 1) % G.snd._smashPool.length;
+      s.currentTime = 0;
+      s.play().catch(function () {});
+      return;
+    }
+    a.currentTime = 0; a.play().catch(function () {});
+  };
 
   G.startIntroBgm = function () { G.stopIngameBgm(); G.snd.intro.currentTime = 0; G.snd.intro.play().catch(function () {}); };
   G.stopIntroBgm  = function () { G.snd.intro.pause(); G.snd.intro.currentTime = 0; };

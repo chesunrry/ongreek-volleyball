@@ -49,19 +49,21 @@
 
   /* --- Offscreen canvas for static background (bg + net) --- */
   var bgCache = null;
-  var cachedNetW = 0, cachedNetH = 0, cachedNetX = 0;
 
   function buildBgCache() {
+    var cw = G.canvasEl.width, ch = G.canvasEl.height;
     var c = document.createElement('canvas');
-    c.width = G.GW; c.height = G.GH;
+    c.width = cw; c.height = ch;
     var bctx = c.getContext('2d');
-    bctx.drawImage(G.img['ingame-bg'], 0, 0, G.GW, G.GH);
+    bctx.drawImage(G.img['ingame-bg'], 0, 0, cw, ch);
+    // Pre-render net
     var netImg = G.img['net'];
     if (netImg.complete && netImg.naturalHeight) {
-      cachedNetH = G.GROUND_Y - G.NET_TOP;
-      cachedNetW = cachedNetH * (netImg.naturalWidth / netImg.naturalHeight);
-      cachedNetX = G.NET_X - cachedNetW / 2;
-      bctx.drawImage(netImg, cachedNetX, G.NET_TOP, cachedNetW, cachedNetH);
+      var sx = cw / G.GW, sy = ch / G.GH;
+      var netH = (G.GROUND_Y - G.NET_TOP) * sy;
+      var netW = netH * (netImg.naturalWidth / netImg.naturalHeight);
+      var netX = G.NET_X * sx - netW / 2;
+      bctx.drawImage(netImg, netX, G.NET_TOP * sy, netW, netH);
     }
     bgCache = c;
   }
@@ -119,7 +121,11 @@
   };
 
   function drawGame(ctx) {
+    // Draw bgCache at native pixel resolution (no transform scaling)
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.drawImage(bgCache, 0, 0);
+    ctx.restore();
 
     var aFrame = Math.floor(G.animT / G.ANIM_MS) % 2;
     var daKey = (G.state === 'CELEBRATION' || G.state === 'POINT') ? (aFrame === 0 ? 'da-1' : 'da-2') : 'da-2';
@@ -129,8 +135,11 @@
     drawPlayer(ctx, G.p2, aFrame);
 
     // Net on top of characters
-    if (cachedNetW) {
-      ctx.drawImage(G.img['net'], cachedNetX, G.NET_TOP, cachedNetW, cachedNetH);
+    var netImg = G.img['net'];
+    if (netImg.complete && netImg.naturalHeight) {
+      var netH = G.GROUND_Y - G.NET_TOP;
+      var netW = netH * (netImg.naturalWidth / netImg.naturalHeight);
+      ctx.drawImage(netImg, G.NET_X - netW / 2, G.NET_TOP, netW, netH);
     }
 
     // ball

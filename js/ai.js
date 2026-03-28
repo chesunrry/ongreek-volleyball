@@ -8,17 +8,17 @@
   G.clamp = clamp;
 
   /* --- Full ball simulation returning {x, y, t} at target Y --- */
-  var _simCache = { bx: 0, by: 0, bvx: 0, bvy: 0, tgt: 0, res: null };
+  var _simCache = { bx: 0, by: 0, bvx: 0, bvy: 0, tgt: 0, res: { x: 0, y: 0, t: 0 } };
 
   function simBallToY(targetY) {
-    // Cache: skip re-simulation if ball state unchanged
     var c = _simCache;
-    if (c.res && c.bx === G.ball.x && c.by === G.ball.y &&
+    if (c.bx === G.ball.x && c.by === G.ball.y &&
         c.bvx === G.ball.vx && c.bvy === G.ball.vy && c.tgt === targetY) {
       return c.res;
     }
     var bx = G.ball.x, by = G.ball.y, bvx = G.ball.vx, bvy = G.ball.vy;
-    for (var t = 0; t < 180; t++) {
+    var t = 0;
+    for (; t < 180; t++) {
       bvy += G.GRAVITY;
       bx += bvx; by += bvy;
       if (bx < G.BALL_R) { bx = G.BALL_R; bvx = -bvx; }
@@ -30,10 +30,10 @@
       }
       if (by >= targetY) break;
     }
-    var res = { x: bx, y: by, t: t };
+    c.res.x = bx; c.res.y = by; c.res.t = t;
     c.bx = G.ball.x; c.by = G.ball.y; c.bvx = G.ball.vx; c.bvy = G.ball.vy;
-    c.tgt = targetY; c.res = res;
-    return res;
+    c.tgt = targetY;
+    return c.res;
   }
 
   G.updateAI = function (p) {
