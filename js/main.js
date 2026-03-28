@@ -125,12 +125,16 @@
   /* ==========================================================
      MAIN LOOP
      ========================================================== */
+  var MAX_TICKS = 3;  // cap ticks per frame to prevent death spiral on slow devices
+
   function loop(ts) {
     var dt = ts - G.lastTS;
     G.lastTS = ts;
     if (dt > 200) dt = 200;
     G.accum += dt;
-    while (G.accum >= G.FDT) { tick(); G.accum -= G.FDT; }
+    var ticks = 0;
+    while (G.accum >= G.FDT && ticks < MAX_TICKS) { tick(); G.accum -= G.FDT; ticks++; }
+    if (G.accum >= G.FDT) G.accum = 0;  // drop excess frames
     G.render();
     requestAnimationFrame(loop);
   }
